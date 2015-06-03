@@ -1,0 +1,49 @@
+19/5
+installed mysql, setup
+
+20/5
+set mysql root password
+wrote sql/ scripts to load csv into mysql,
+then group by minute
+
+21/5
+count + plot of 'quake' during nepal earthquake
+
+22/5
+met with andreas
+	- use IDF (log tweets/hits) to count occurrences
+	- make system which accepts terms and plots them
+	- save results for a term as CSV
+	- look at TOPSY, D3
+finally, collect some 20 events with start time, etc
+use existing techniques on same data and and compare results
+find optimal parameters for these techniques (niagarino?)
+
+26/5
+JDBC - TweetCount
+JFreeChart - timeseries, date formatting, etc
+
+27/5
+showed IDF, JFreeChart to Andreas
+got papers to read
+next- collect more events
+introduction to Niagarino next week and then start
+comparision of techniques
+created event_tweet view to store tweets in a time range
+
+28/5
+lab meeting - Andreas' presentation for Caise Stockholm
+wrote script for batch LOAD FILE in mysql
+switched from event_tweet view to command line LOAD INFILE (scripts/load.sh)
+
+1/6
+setup niagarino
+stop using scripts/cut.sh - load.sh can discard extra columns
+
+2/6
+fixed dateformat in EventDetector with Andreas
+started running EventDetector on boston_bombing, etc
+next -> batch run of detector for 
+	- multiple inputs
+	- parameters of techniques
+	- all techniques
