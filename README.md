@@ -1,4 +1,5 @@
 #twitter-events
+Data files and descriptions of events from Twitter data
 
 ## Description
 
