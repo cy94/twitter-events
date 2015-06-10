@@ -11,7 +11,7 @@
 
 if (( $# < 4 )); then
 	#statements
-	echo "usage: ./check <prefix> <start> <end> <destination>"
+	echo "usage: ./unzip <prefix> <start> <end> <destination>"
 	exit -1
 fi
 

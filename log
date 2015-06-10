@@ -49,3 +49,22 @@ next -> batch run of detector for
 	- all techniques
 
 3/6
+
+9/6
+met Michael, asked about parameters to use
+plot output as quality vs parameter
+use parameter p/2, p, 2p
+quality = f(precision, recall)
+run eventdetector only for first 2 methods
+added events - ontake eruption, afghan landslide
+
+
+
+
+
+
+
+
+
+
+
