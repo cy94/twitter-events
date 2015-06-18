@@ -1,3 +1,8 @@
+-- query.sql
+
+-- collection of SQL scripts used before the final JDBC version
+-- see: JDBC code in twitter-events-plot 
+
 -- convert the date from string to MySQL date format
 -- and select tweets with the required content 
 -- eg - 'quake'

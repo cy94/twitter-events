@@ -1,3 +1,7 @@
+# csv.sh
+
+# Initial collection of scripts. These have been separated into
+# the other scripts in this directory
 
 # selects the first 3 columns from the input twitter
 # data file - id, creation_date and content and outputs

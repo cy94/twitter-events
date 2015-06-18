@@ -1,7 +1,10 @@
+-- create.sql
+
+-- creates the tweet table for twitter data
+-- contains the first 3 columns - tweet ID, date and time, content
+
 drop table if exists tweet;
 
--- the tweet table stores the tweet creation date+time
--- and the text of the tweet
 create table tweet ( 
 	id INT(20), 
 	creation_date DATETIME,

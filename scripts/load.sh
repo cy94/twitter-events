@@ -1,10 +1,15 @@
-# mysql LOAD INFILE from command line
+# load.sh
+
+# Import multiple CSV files into MySQL using LOAD INFILE
 
 # loads all the CSV files in the pwd into the MySQL database
-# db: twitter
+
+# db:       twitter
 # username: root
 # password: internship
-# table: tweet
+# table:    tweet
+
+# usage: ./load.sh
 
 # ignores the first line (header)
 # then converts the second column (date) to a 
@@ -15,5 +20,4 @@ do
 	printf "Loading $f ..."
     mysql -e "LOAD DATA LOCAL INFILE '`pwd`/$f' INTO TABLE tweet IGNORE 1 LINES (id, @date_var, content) SET creation_date = STR_TO_DATE(@date_var, '%a %b %e %k:%i:%s GMT %Y')	;" -u root --password=internship twitter
     printf "done\n"
-
 done

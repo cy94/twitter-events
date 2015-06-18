@@ -72,6 +72,13 @@ added sydney_hostage event
 ran watis, fullrandom, randomevents
 changed edcow params - didnt find any events with previous ones
 
+17/6
+new edcow params worked! (1, 64, 2, 0.2)
+
+18/6
+added documentation to twitter-events-plot
+
+
 
 
 

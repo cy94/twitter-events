@@ -1,3 +1,8 @@
+-- load.sql
+
+-- Initial version of CSV to MySQL script
+-- Use scripts/load.sh instead to import a batch of CSV files
+
 -- inserts twitter feed data into the table tweet
 -- the first line contains the column names
 LOAD DATA LOCAL INFILE 

@@ -1,5 +1,22 @@
-# check for keyword before putting in database
-# $1 is the keyword from command line
+# check.sh
+
+# Counts the occurence of a keyword in all
+# CSV files in the current directory
+
+# args: 
+# $1 - the keyword to search for
+
+# usage: 
+# The pwd contain A.csv has 100 tweets with 'earthquake'
+# , B.csv has 200 tweets with 'earthquake'
+# ./check.sh earthquake
+
+# output:
+# A.csv
+# 100 
+# B.csv
+# 2000
+
 
 if [ $# -eq 0 ]; then
 	#statements
