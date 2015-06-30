@@ -18,6 +18,6 @@
 for f in *.csv
 do
 	printf "Loading $f ..."
-    mysql -e "LOAD DATA LOCAL INFILE '`pwd`/$f' INTO TABLE tweet IGNORE 1 LINES (id, @date_var, content) SET creation_date = STR_TO_DATE(@date_var, '%a %b %e %k:%i:%s GMT %Y')	;" -u root --password=internship twitter
+    mysql -e "LOAD DATA LOCAL INFILE '`pwd`/$f' INTO TABLE tweet_en IGNORE 1 LINES (id, @date_var, content) SET creation_date = STR_TO_DATE(@date_var, '%a %b %e %k:%i:%s GMT %Y')	;" -u root --local-infile --password=internship twitter
     printf "done\n"
 done

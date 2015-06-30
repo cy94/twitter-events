@@ -1,6 +1,9 @@
 evaluation*
 data*
 data_clean*
+data_en*
 niagarino*
 apache*
 papers*
+# output files
+*.out

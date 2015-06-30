@@ -102,6 +102,12 @@ to detect event (using R
 wrote most of stddev.py - high stddev observed for non english tweets
 todo - try this with english tweets
 
+30/6
+results of stddev.py on nepal_quake good - earthquake in top 10/20 stddev
+nearly all other words with high stddev are non-english 
+took english tweet data from mathew, run stddev on these
+todo: try stddev method with only english tweets
+
 
 
 

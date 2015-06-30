@@ -11,7 +11,6 @@ import mysql.connector
 import datetime
 import math
 import numpy
-import pickle
 
 def init_db():
 	cnx = mysql.connector.connect(user='root', password='internship',
@@ -24,7 +23,7 @@ def init_db():
 
 def get_data_by_date(cursor, start_date, end_date):
 	# query = "select TIME(creation_date), GROUP_CONCAT(content SEPARATOR ' ') from tweet where creation_date between '{0}' and '{1}' limit 10"
-	query = "select creation_date, content from tweet where creation_date between '{0}' and '{1}'"
+	query = "select creation_date, content from tweet_en where creation_date between '{0}' and '{1}'"
 	query = query.format(start_date, end_date)
 
 	cursor.execute(query)
@@ -67,7 +66,7 @@ def main():
 	# 		}
 	#	  time2 : ...
 	# 	}
-	time_wordIDF_dict = {}
+	# time_wordIDF_dict = {}
 
 	word_stdev = {}
 
@@ -86,27 +85,35 @@ def main():
 
 			# initialize with None, fill the std dev of IDF later 
 			if word not in word_stdev:
-				word_stdev[word] = None
+				word_stdev[word] = []
 
 		# find IDF for each word in this minute
 		for word in wordIDF_dict:
-			wordIDF_dict[word] = get_idf(tweets_per_minute_dict[time], wordIDF_dict[word])
+			# wordIDF_dict[word] = get_idf(tweets_per_minute_dict[time], wordIDF_dict[word])
+			# store data series in word_stdev
+			word_stdev[word].append(
+					get_idf(tweets_per_minute_dict[time], wordIDF_dict[word])
+				)
 
 		# add this dict to main dict
-		time_wordIDF_dict[time] = wordIDF_dict
+		# time_wordIDF_dict[time] = wordIDF_dict
+
+	print "Unique words: ", len(word_stdev)
 
 	print "Finding stdevs"
 	for word in word_stdev:
-		data_series = []
+		# data_series = []
 
-		for time in time_wordIDF_dict:
-			# if the word occurred in this time use IDF, else IDF with 0 count
-			data_series.append(
-				time_wordIDF_dict[time][word] if word in time_wordIDF_dict[time]
-				else get_idf(tweets_per_minute_dict[time], 0)
-			)
+		# for time in time_wordIDF_dict:
+		# 	# if the word occurred in this time use IDF, else IDF with 0 count
+		# 	data_series.append(
+		# 		time_wordIDF_dict[time][word] if word in time_wordIDF_dict[time]
+		# 		else get_idf(tweets_per_minute_dict[time], 0)
+		# 	)
 
-		word_stdev[word] = numpy.std(data_series)
+		# word_stdev[word] = numpy.std(data_series)
+		# data series is stored as array in word_stdev
+		word_stdev[word] = numpy.std(word_stdev[word])
 
 	sorted_stdev = sorted(word_stdev.iteritems(), key=lambda x:x[1], reverse=True)
 
