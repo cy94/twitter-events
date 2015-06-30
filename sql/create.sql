@@ -6,7 +6,7 @@
 drop table if exists tweet;
 
 create table tweet ( 
-	id INT(20), 
+	id BIGINT(20) UNSIGNED, 
 	creation_date DATETIME,
 	content VARCHAR(150) 
 	);

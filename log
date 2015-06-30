@@ -78,8 +78,29 @@ new edcow params worked! (1, 64, 2, 0.2)
 18/6
 added documentation to twitter-events-plot
 
+22/6
+started multiple event plotting
 
+23/6
+mostly finished multiple event plotting
 
+24/6 
+some more changes to multiple event plot, discussion with andreas of 
+what to do next - IDF of words like love, twitter is almost constant over
+time. IDF of event words drops during event. approaches -
+	1. remove stopwords by using constant nature
+	2. get event words by detecting step nature
+
+25/6
+discussion with andreas - technique for detection
+detect stopwords - didnt find a way to do this
+step detection for event words - already done
+find std dev / mean of IDF and see if it can be used
+to detect event (using R
+
+28/6
+wrote most of stddev.py - high stddev observed for non english tweets
+todo - try this with english tweets
 
 
 
