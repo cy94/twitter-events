@@ -14,12 +14,13 @@ import datetime
 import math
 import numpy
 
+import matplotlib.pyplot as plt
+
 import string
-import nltk
 
 def get_stopwords(fname):
 	with open(fname, 'r') as f:
-		return f.readlines()
+		return set(f.readlines())
 
 STOPWORDS = get_stopwords("stopwords.txt")
 
@@ -65,18 +66,30 @@ def group_tweets_by_time(cursor):
 def get_word_IDFseries(grouped_tweets, tweets_per_minute_dict):
 	print "Finding IDFs"
 	
+	english_chars = set(string.printable)
+
 	word_IDFseries = {}
+	# trans_table = dict((ord(char), unicode(" ", "utf-8")) for char in string.punctuation)
 
 	for time, tweets in grouped_tweets.iteritems():
 		word_count_dict = {}
 
-		tweet_text = " ".join(tweets)
-		
 		# remove apostrophe
-		# replace other punctuation with a whitespace
+		# tweet_text = " ".join(tweets).replace("'", "").lower()
+		tweet_text = " ".join(tweets).lower()
+
+		# replace other punctuation with space
+		# tweet_text = tweet_text.translate(trans_table)
+		
 		# then tokenize on whitespace
-		words = tweet_text.replace("'", "").translate(None, string.punctuation).split()
-		words = [w for w in words if w not in STOPWORDS]
+		words = tweet_text.split()
+		# words = [w for w in words if w not in STOPWORDS]
+
+		# checks if a word has non english (non printable) chars
+		is_english = lambda word : not set(word) - english_chars
+
+		# remove words with non printable chars 
+		words = filter(is_english, words)
 
 		for word in words:
 			if word in word_count_dict:
@@ -97,30 +110,17 @@ def get_word_IDFseries(grouped_tweets, tweets_per_minute_dict):
 
 	return word_IDFseries
 
-def write_to_file(word_stdev):
-	print "Writing to file"
-
-	with open("stdev.out", "w") as f:
-		for w, c in word_stdev:
-			s = w + ", " + str(c) + "\n"
-			s = s.encode("utf8")
-			f.write(s)
-
 def get_word_stdev_from_IDFseries(word_IDFseries):
 	word_stdev = {}
 
 	print "Finding stdevs"
 	for word in word_IDFseries:
-		# data series is stored as array in word_stdev
 		word_stdev[word] = numpy.std(word_IDFseries[word])
 
 	return word_stdev
-		
-def main():
-	cnx, cursor = init_db()
 
-	start_date = raw_input("Enter start date, time (yyyy-mm-dd hh:MM): ")
-	end_date = raw_input("Enter finish date, time (yyyy-mm-dd hh:MM): ") 
+def get_word_stdev(start_date, end_date):
+	cnx, cursor = init_db()
 
 	print "Getting data"
 	cursor = get_data_by_date(cursor, start_date, end_date)
@@ -128,6 +128,7 @@ def main():
 	# group tweets by time (minute)
 	grouped_tweets = group_tweets_by_time(cursor)
 	
+	# count tweets per minute
 	tweets_per_minute_dict = {
 		time : len(tweets) for (time, tweets) in grouped_tweets.iteritems()
 	}
@@ -138,10 +139,13 @@ def main():
 
 	# dict for word - std dev of word IDF in this time period
 	word_stdev = get_word_stdev_from_IDFseries(word_IDFseries)
-	sorted_stdev = sorted(word_stdev.iteritems(), key=lambda x:x[1], reverse=True)
+	
+	close_db(cnx)
 
-	write_to_file(sorted_stdev)
-	close_db(cnx)	
+	return word_stdev	
+
+def main():
+	pass	
 
 if __name__ == '__main__':
 	main()

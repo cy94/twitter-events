@@ -108,6 +108,10 @@ nearly all other words with high stddev are non-english
 took english tweet data from mathew, run stddev on these
 todo: try stddev method with only english tweets
 
+1/7
+some fixes to stddev.py. 
+ran on 6 events (english)
+
 
 
 
