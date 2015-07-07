@@ -5,6 +5,10 @@ data_en*
 niagarino*
 apache*
 papers*
+
 # output files
 *.out
+
 todo
+
+*.pyc
