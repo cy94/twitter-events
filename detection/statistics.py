@@ -17,7 +17,7 @@ def print_stats(word_stdev, IDF_HIGH, IDF_LOW):
 	print "%f" %(lowidf/total)
 
 def plot_stats(word_stdev):
-	plt.hist(word_stdev.values(), normed=True, bins=30)
+	plt.hist(word_stdev.values(), normed=True, bins=50)
 	plt.title("IDF Std-dev histogram")
 	plt.xlabel("IDF Std-dev")
 	plt.ylabel("Count")

@@ -3,10 +3,17 @@ import csv
 def csv_to_dict(fname):
 	with open(fname, "r") as f:
 		reader = csv.reader(f)
+		word_stdev = {}
 
-		for line in list(reader):
-			print line
-			
+		for line in reader:
+			try:
+				word = line[0]
+				stdev = float(line[1])
+
+				word_stdev[word] = stdev
+			except:
+				print line
+
 		# return { line[0]: line[1] for line in list(reader) }
 
 def main():

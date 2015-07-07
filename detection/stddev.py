@@ -14,8 +14,6 @@ import datetime
 import math
 import numpy
 
-import matplotlib.pyplot as plt
-
 import string
 
 def get_stopwords(fname):
@@ -69,21 +67,23 @@ def get_word_IDFseries(grouped_tweets, tweets_per_minute_dict):
 	english_chars = set(string.printable)
 
 	word_IDFseries = {}
-	# trans_table = dict((ord(char), unicode(" ", "utf-8")) for char in string.punctuation)
+	trans_table = dict((ord(char), unicode(" ", "utf-8")) for char in string.punctuation)
 
 	for time, tweets in grouped_tweets.iteritems():
 		word_count_dict = {}
 
 		# remove apostrophe
-		# tweet_text = " ".join(tweets).replace("'", "").lower()
-		tweet_text = " ".join(tweets).lower()
+		tweet_text = " ".join(tweets).replace("'", "").lower()
+		# tweet_text = " ".join(tweets).lower()
 
 		# replace other punctuation with space
-		# tweet_text = tweet_text.translate(trans_table)
+		tweet_text = tweet_text.translate(trans_table)
 		
 		# then tokenize on whitespace
 		words = tweet_text.split()
-		# words = [w for w in words if w not in STOPWORDS]
+
+		# remove stopwords
+		words = [w for w in words if w not in STOPWORDS]
 
 		# checks if a word has non english (non printable) chars
 		is_english = lambda word : not set(word) - english_chars
