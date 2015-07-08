@@ -22,7 +22,8 @@ def get_stopwords(fname):
 
 STOPWORDS = get_stopwords("stopwords.txt")
 
-
+# connect to database and return the connection
+# and cursor objects
 def init_db():
 	cnx = mysql.connector.connect(user='root', password='internship',
                               host='127.0.0.1',
@@ -32,9 +33,11 @@ def init_db():
 
 	return cnx, cursor
 
+# close database connection
 def close_db(cnx):
 	cnx.close()	
 
+# get tweets in a date,time range
 def get_data_by_date(cursor, start_date, end_date):
 	query = "select creation_date, content from tweet_en where creation_date between '{0}' and '{1}'"
 	query = query.format(start_date, end_date)
@@ -43,8 +46,9 @@ def get_data_by_date(cursor, start_date, end_date):
 
 	return cursor
 
+# IDF formula
 def get_idf(total, count):
-	return math.log(float(total)/(count + 1))	
+	return math.log(float(total)/(count + 1), 10)	
 
 def group_tweets_by_time(cursor):
 	grouped_tweets = {}
@@ -60,36 +64,44 @@ def group_tweets_by_time(cursor):
 
 	return grouped_tweets
 
-# count occurrences of words per minute and find IDF
-def get_word_IDFseries(grouped_tweets, tweets_per_minute_dict):
-	print "Finding IDFs"
-	
+# args:
+# 	a list of tweets
+# return: 
+# 	list distinct words per tweet, punctuation, stopwords removed
+def get_words_from_text(text):
 	english_chars = set(string.printable)
-
-	word_IDFseries = {}
 	trans_table = dict((ord(char), unicode(" ", "utf-8")) for char in string.punctuation)
 
+	# remove punctuation
+	text = text.replace("'", "").lower()
+	text = text.translate(trans_table)
+
+	# remove stopwords
+	words = [w for w in text.split() if w not in STOPWORDS]
+
+	# remove words with non-english characters
+	is_english = lambda word : not set(word) - english_chars
+	words = filter(is_english, words)
+
+	# remove small / large words
+	words = [w for w in words if len(w) >= 4 and len(w) <= 10]
+	
+	return words
+
+# count occurrences of words per minute and find IDF
+# 
+# args: 
+# 	grouped_tweets: dict of {time (minute): [list of tweet strings in this minute]}
+# 	tweets_per_minute_dict: dict of {time (minute): total no of tweets in this minute}
+# return: 
+# 	{word: [list of IDF values]}
+def get_word_IDFseries_from_tweets(grouped_tweets, tweets_per_minute_dict):
+	print "Finding IDFs"
+	word_IDFseries = {}
+	
 	for time, tweets in grouped_tweets.iteritems():
 		word_count_dict = {}
-
-		# remove apostrophe
-		tweet_text = " ".join(tweets).replace("'", "").lower()
-		# tweet_text = " ".join(tweets).lower()
-
-		# replace other punctuation with space
-		tweet_text = tweet_text.translate(trans_table)
-		
-		# then tokenize on whitespace
-		words = tweet_text.split()
-
-		# remove stopwords
-		words = [w for w in words if w not in STOPWORDS]
-
-		# checks if a word has non english (non printable) chars
-		is_english = lambda word : not set(word) - english_chars
-
-		# remove words with non printable chars 
-		words = filter(is_english, words)
+		words = get_words_from_text(" ".join(tweets))
 
 		for word in words:
 			if word in word_count_dict:
@@ -102,14 +114,16 @@ def get_word_IDFseries(grouped_tweets, tweets_per_minute_dict):
 			idf = get_idf(tweets_per_minute_dict[time], word_count_dict[word])
 
 			if word not in word_IDFseries:
-				# create a list
 				word_IDFseries[word] = [idf]
 			else:	
-				# append to list
 				word_IDFseries[word].append(idf)
 
 	return word_IDFseries
 
+# args:
+# 	word_IDFseries: {word: [list of IDF values]}
+# return:
+# 	{word: stddev of list}
 def get_word_stdev_from_IDFseries(word_IDFseries):
 	word_stdev = {}
 
@@ -119,6 +133,10 @@ def get_word_stdev_from_IDFseries(word_IDFseries):
 
 	return word_stdev
 
+# args:
+# 	start and end date, time for tweets in database
+# return:
+# 	{word: stddev of IDF} for tweets in date range
 def get_word_stdev(start_date, end_date):
 	cnx, cursor = init_db()
 
@@ -133,7 +151,7 @@ def get_word_stdev(start_date, end_date):
 		time : len(tweets) for (time, tweets) in grouped_tweets.iteritems()
 	}
 
-	word_IDFseries = get_word_IDFseries(grouped_tweets, tweets_per_minute_dict)		
+	word_IDFseries = get_word_IDFseries_from_tweets(grouped_tweets, tweets_per_minute_dict)		
 
 	print "Unique words: ", len(word_IDFseries)
 
@@ -143,6 +161,83 @@ def get_word_stdev(start_date, end_date):
 	close_db(cnx)
 
 	return word_stdev	
+
+# count occurrences of words per minute and find IDF
+# 
+# args: 
+# 	grouped_tweets: dict of {time (minute): [list of tweet strings in this minute]}
+# 	tweets_per_minute_dict: dict of {time (minute): total no of tweets in this minute}
+# return: 
+# 	{time (minute): {word: IDF in this minute}} 
+def get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict):
+	print "Finding IDFs"
+
+	time_word_idf = {}
+	word_IDF = {}
+
+	for time, tweets in grouped_tweets.iteritems():
+		word_count_dict = {}
+
+		words = get_words_from_text(" ".join(tweets))
+
+		large_words = lambda w: len(w) > 4
+		words = filter(large_words , words)
+
+		for word in words:
+			if word in word_count_dict:
+				word_count_dict[word] += 1
+			else:
+				word_count_dict[word]  = 1
+
+		word_IDF_dict = {}
+
+		# find IDF for each word in this minute
+		for word in word_count_dict:
+			idf = get_idf(tweets_per_minute_dict[time], word_count_dict[word])
+			word_IDF_dict[word] = [idf]
+
+			if word not in word_IDF:
+				# final result
+				word_IDF[word] = []
+			
+		time_word_idf[time] = word_IDF_dict	
+
+			
+	print "Unique words:",len(word_IDF)
+
+	# find IDF for each unique word for each time point
+	for word in word_IDF:
+		for time in time_word_idf:
+			# word occurred in this time
+			if word in time_word_idf[time]:
+				# real IDF value
+				word_IDF[word].append(time_word_idf[time][word])
+			else:
+				# default IDF value
+				word_IDF[word].append(get_idf(tweets_per_minute_dict[time], 0))
+
+	
+	return word_IDF
+
+def get_word_IDFcomplete(start_date, end_date):
+	cnx, cursor = init_db()
+
+	print "Getting data"
+	cursor = get_data_by_date(cursor, start_date, end_date)
+
+	# group tweets by time (minute)
+	grouped_tweets = group_tweets_by_time(cursor)
+	
+	# count tweets per minute
+	tweets_per_minute_dict = {
+		time : len(tweets) for (time, tweets) in grouped_tweets.iteritems()
+	}
+
+	word_IDF = get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict)		
+
+	close_db(cnx)
+
+	return word_IDF	
 
 def main():
 	pass	
