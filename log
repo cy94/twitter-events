@@ -112,6 +112,15 @@ todo: try stddev method with only english tweets
 some fixes to stddev.py. 
 ran on 6 events (english)	
 
+7/7
+use nls in R to find model for IDF graph
+
+8/7
+find IDF series for all words, then model with R 
+filter words to find IDF for using word length 
+and IDF stddev
+
+
 
 
 
