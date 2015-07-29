@@ -120,7 +120,25 @@ find IDF series for all words, then model with R
 filter words to find IDF for using word length 
 and IDF stddev
 
+9/7
+finish idf for all words, imported in R and plotted
+plot not correct! why? total count of tweets - correct
+tokenize of words, removal of punctuation, stopwords - correct?
 
+13/7
+found mistake - iterating through dictionary keys is UNORDERED!
+need to sort dict keys (time values) and then iterate. IDF values 
+were in wrong order till now. this should fix it.
+with proper IDF values - export to CSV, import in R, then run sigmoid curve fit 
+on it 
+--
+ran sigmoid fit on mh17, boston, works well
+todo: filter more words based on stddev
+clustering of points (a1, a2, a3, a4) into sigmoid / line
+a1 is vertical shift, a4 is horizontal shift, can be ignored
+
+14/7
+start clustering points?
 
 
 

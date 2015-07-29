@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 import numpy
 import matplotlib.pyplot as plt
 
@@ -18,7 +18,7 @@ def print_stats(word_stdev, IDF_HIGH, IDF_LOW):
 	print "low idf: %f"  % (lowidf/total)
 
 def plot_stats(word_stdev):
-	plt.hist(word_stdev.values(), normed=True, bins=100, histtype='step')
+	plt.hist(word_stdev.values(), normed=True, bins=100, histtype='step', log=True)
 	plt.title("IDF Std-dev histogram")
 	plt.xlabel("IDF Std-dev")
 	plt.ylabel("Count")

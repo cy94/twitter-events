@@ -5,7 +5,8 @@
 
 # a twitter event detection technique that 
 # uses std dev threshold to remove stopwords and 
-# find keywords
+# find keywords. used to find the IDFs of these possible
+# keywords in a given group of tweets
 
 import mysql.connector
 
@@ -14,11 +15,13 @@ import datetime
 import math
 import numpy
 
+import itertools
 import string
 
+# read a set of stopwords from file: fname
 def get_stopwords(fname):
 	with open(fname, 'r') as f:
-		return set(f.readlines())
+		return set(map(lambda s:s.strip(), f.readlines()))
 
 STOPWORDS = get_stopwords("stopwords.txt")
 
@@ -48,14 +51,20 @@ def get_data_by_date(cursor, start_date, end_date):
 
 # IDF formula
 def get_idf(total, count):
-	return math.log(float(total)/(count + 1), 10)	
+	return math.log10(float(total)/(count + 1))
 
+# args:
+# cursor: a MySQL cursor with ID, tweet datettime, tweet content rows
+# return:
+# 	a dictionary with key as as the datetime(date, hour, minute) and
+# 	value as a list of tweets in that datetime
 def group_tweets_by_time(cursor):
 	grouped_tweets = {}
 
 	for (date, tweet) in cursor:
 		# remove the second, microsecond parts from the time 
-		time = date.replace(second=0, microsecond=0).time()
+		# time = date.replace(second=0, microsecond=0).time()
+		time = date.replace(second=0, microsecond=0)
 
 		if time in grouped_tweets:
 			grouped_tweets[time].append(tweet)
@@ -65,17 +74,18 @@ def group_tweets_by_time(cursor):
 	return grouped_tweets
 
 # args:
-# 	tweet text
+# 	text: tweet content 
 # return: 
-# 	list of distinct words per tweet, punctuation, stopwords removed
+# 	list of distinct words per tweet with punctuation, stopwords removed
 def get_words_from_text(text):
 	english_chars = set(string.printable)
 	trans_table = dict((ord(char), unicode(" ", "utf-8")) for char in string.punctuation)
 
-	# remove punctuation
 	text = text.lower()
-	text = text.translate(trans_table)
 
+	# remove punctuation
+	text = text.translate(trans_table)
+	
 	# remove stopwords
 	words = [w for w in text.split() if w not in STOPWORDS]
 
@@ -83,16 +93,18 @@ def get_words_from_text(text):
 	is_english = lambda word : not set(word) - english_chars
 	words = filter(is_english, words)
 
-	# remove small / large words
+	# remove small and large words
 	words = [w for w in words if len(w) >= 4 and len(w) <= 10]
 
-	return words
+	# remove duplicates
+	return set(words)
 
-# count occurrences of words per minute and find IDF
+# count occurrences of words per minute and find IDF for each word
+# (only the times at which the word occurred)
 # 
 # args: 
-# 	grouped_tweets: dict of {time (minute): [list of tweet strings in this minute]}
-# 	tweets_per_minute_dict: dict of {time (minute): total no of tweets in this minute}
+# 	grouped_tweets: dict of {time : [list of tweet strings in this minute]}
+# 	tweets_per_minute_dict: dict of {time : total no of tweets in this minute}
 # return: 
 # 	{word: [list of IDF values]}
 def get_word_IDFseries_from_tweets(grouped_tweets, tweets_per_minute_dict):
@@ -127,7 +139,6 @@ def get_word_IDFseries_from_tweets(grouped_tweets, tweets_per_minute_dict):
 def get_word_stdev_from_IDFseries(word_IDFseries):
 	word_stdev = {}
 
-	print "Finding stdevs"
 	for word in word_IDFseries:
 		word_stdev[word] = numpy.std(word_IDFseries[word])
 
@@ -169,7 +180,7 @@ def get_word_stdev(start_date, end_date):
 # 	tweets_per_minute_dict: dict of {time (minute): total no of tweets in this minute}
 # return: 
 # 	{time (minute): {word: IDF in this minute}} 
-def get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict, select, threshold):
+def get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict, select, threshold, keywords):
 	print "Finding IDFs"
 
 	time_word_idf = {}
@@ -179,7 +190,12 @@ def get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict, sel
 	for time, tweets in grouped_tweets.iteritems():
 		word_count_dict = {}
 
-		words = get_words_from_text(" ".join(tweets))
+		# get unique words from each tweet, then join into single list of words
+		words = itertools.chain.from_iterable(map(get_words_from_text, tweets))
+
+		# find IDF only for these words
+		if keywords:
+			words = [w for w in words if w in keywords]
 
 		for word in words:
 			if word in word_count_dict:
@@ -203,13 +219,20 @@ def get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict, sel
 				
 		time_word_idf[time] = word_IDF_dict	
 
+	# find the base IDF only once (log (total no of tweets))
+	base_IDF = {}
+
+	for time in time_word_idf:
+		base_IDF[time] = get_idf(tweets_per_minute_dict[time], 0)
+
+	print "Finding stdevs of %d words" % len(word_IDF_stdev)
 	word_stdev = get_word_stdev_from_IDFseries(word_IDF_stdev)
 
 	# pick words to find complete IDF series for 
 	# based on IDF stddev
 	if select:
 		final_word_stdev = { word: word_stdev[word] for word in word_stdev if word_stdev[word] >= threshold }
-		print "Selected ", len(final_word_stdev), " words from ", len(word_stdev)
+		print "First filter: ", len(final_word_stdev), " words from ", len(word_stdev)
 	else:
 		final_word_stdev = word_stdev
 		print len(final_word_stdev), " words"
@@ -218,21 +241,30 @@ def get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict, sel
 	for word in final_word_stdev:
 		word_IDF[word] = []
 
-	# find IDF for each unique word for each time point
+	# find IDF for each word for each time point
 	for word in word_IDF:
-		for time in time_word_idf:
+		for time in sorted(time_word_idf):
 			# word occurred in this time
 			if word in time_word_idf[time]:
 				# real IDF value
 				word_IDF[word].append(time_word_idf[time][word])
 			else:
 				# default IDF value
-				word_IDF[word].append(get_idf(tweets_per_minute_dict[time], 0))
+				word_IDF[word].append(base_IDF[time])
 
-	
-	return word_stdev, word_IDF
+	# find stdev again for the whole timeseries
+	new_word_stdev = get_word_stdev_from_IDFseries(word_IDF)
+	# second filtering of words based on stddev of complete time series
+	# the top line enables the second filter and the second line disables it
+	final_word_IDF = { word: word_IDF[word] for word in new_word_stdev if new_word_stdev[word] >= 0.5}
+	# final_word_IDF = word_IDF
 
-def get_word_IDFcomplete(start_date, end_date, select=False, threshold=0.7):
+
+	print "Second filter: %d words from %d" %(len(final_word_IDF), len(new_word_stdev))
+
+	return word_stdev, final_word_IDF
+
+def get_word_IDFcomplete(start_date, end_date, select=False, threshold=0.7, keywords=[]):
 	cnx, cursor = init_db()
 
 	print "Getting data"
@@ -246,11 +278,11 @@ def get_word_IDFcomplete(start_date, end_date, select=False, threshold=0.7):
 		time : len(tweets) for (time, tweets) in grouped_tweets.iteritems()
 	}
 
-	word_IDF = get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict, select, threshold)		
+	word_stdev, word_IDF = get_word_IDFcomplete_from_tweets(grouped_tweets, tweets_per_minute_dict, select, threshold, keywords)		
 
 	close_db(cnx)
 
-	return word_IDF	
+	return word_stdev, word_IDF	
 
 def main():
 	pass	

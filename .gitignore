@@ -8,7 +8,17 @@ papers*
 
 # output files
 *.out
+*.csv
 
 todo
 
 *.pyc
+
+~*
+
+presentation*
+report*
+
+detection/out*
+
+detection/classified/*

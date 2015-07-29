@@ -1,5 +1,7 @@
+#!/usr/bin/python
 import csv
 
+# read a word-number CSV
 def csv_to_dict(fname):
 	with open(fname, "r") as f:
 		reader = csv.reader(f)
@@ -9,9 +11,12 @@ def main():
 	pass
 
 def write_idf_to_file(word_idf, fname):
-	print "Writing IDFs to file ... ",
+	print "Writing IDFs to file: %s ... " %fname ,
 
-	series_length = 180
+	# number of time points
+	series_length = max(map(len, word_idf.values()))
+
+
 	header = "word," + ",".join(map(str, range(1, series_length+1)))
 
 	with open(fname, "w") as f:
@@ -25,7 +30,7 @@ def write_idf_to_file(word_idf, fname):
 	print "done"
 
 def write_stddev_to_file(word_stdev, fname):
-	print "Writing stddev to file ...",
+	print "Writing stddev to file: %s ..." %fname ,
 
 	with open(fname, "w") as f:
 		for w, c in word_stdev:

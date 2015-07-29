@@ -1,5 +1,5 @@
 #twitter-events
-Data files and descriptions of events and scripts to handle
+Data files and descriptions of events, and scripts to handle
 CSV files related to Twitter data
 
 
@@ -21,6 +21,9 @@ bash scripts to handle .csv files
 ##### sql
 SQL scripts for Twitter data (mostly not used,
 implemented in bash)
+
+#### detection
+An event detection technique implemented in Python and R
 
 ##### results
 IDF-Time plots of keywords for events

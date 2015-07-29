@@ -7,7 +7,7 @@
 # db:       twitter
 # username: root
 # password: internship
-# table:    tweet
+# table:    tweet_en 
 
 # usage: ./load.sh
 
